@@ -12,7 +12,6 @@ const Login: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   
-  const [errorMessage, setErrorMessage] = useState<string>('');
   const [formData, setFormData] = useState<LoginFormData>({
     email: '',
     password: '',
@@ -74,8 +73,6 @@ const Login: React.FC = () => {
             <h1 className="blog-title">📝 MyBlog</h1>
             <p className="blog-tagline">Welcome back to your stories</p>
           </div>
-          
-          {errorMessage && <div className="error-message">{errorMessage}</div>}
           
           <form onSubmit={handleSubmit}>
           <div className="form-group">
