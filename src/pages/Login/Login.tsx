@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import './Login.css';
+import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface LoginFormData {
   email: string;
@@ -7,11 +9,14 @@ interface LoginFormData {
 }
 
 const Login: React.FC = () => {
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  
+  const [errorMessage, setErrorMessage] = useState<string>('');
   const [formData, setFormData] = useState<LoginFormData>({
     email: '',
     password: '',
   });
-
   const [errors, setErrors] = useState<Partial<LoginFormData>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -51,11 +56,8 @@ const Login: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      // TODO: Implement actual login logic here
-      console.log('Login attempt with:', formData);
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      alert('Login successful!');
+      await login(formData.email, formData.password);
+      navigate('/blog');
     } catch (error) {
       console.error('Login error:', error);
       alert('Login failed. Please try again.');
@@ -66,9 +68,16 @@ const Login: React.FC = () => {
 
   return (
     <div className="login-container">
-      <div className="login-box">
-        <h1>Login</h1>
-        <form onSubmit={handleSubmit}>
+      <div className="login-wrapper">
+        <div className="login-box">
+          <div className="login-header">
+            <h1 className="blog-title">📝 MyBlog</h1>
+            <p className="blog-tagline">Welcome back to your stories</p>
+          </div>
+          
+          {errorMessage && <div className="error-message">{errorMessage}</div>}
+          
+          <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="email">Email</label>
             <input
@@ -100,11 +109,15 @@ const Login: React.FC = () => {
           <button type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Logging in...' : 'Login'}
           </button>
-        </form>
+          </form>
 
-        <div className="login-footer">
-          <a href="#forgot">Forgot password?</a>
-          <a href="#signup">Sign up</a>
+          <div className="login-footer">
+            <span className="footer-text">Don't have an account? <a href="/register" className="signup-link">Register</a></span>
+          </div>
+          
+          <div className="forgot-password">
+            <a href="#forgot">Forgot your password?</a>
+          </div>
         </div>
       </div>
     </div>
