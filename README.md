@@ -1,46 +1,80 @@
-# Getting Started with Create React App
+# Simple Blog - Modern Writing Platform
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A high-fidelity, premium blog platform built with React, focused on a seamless writing experience and modern aesthetics.
 
-## Available Scripts
+## 🚀 Features
 
-In the project directory, you can run:
+- **Rich Text Editor**: Powered by Tiptap, allowing for bold, italics, headings, lists, quotes, and code blocks.
+- **Image Management**: Support for cover photos and inline images with direct upload to Supabase Storage.
+- **Dynamic Content**: Live preview while editing, auto-generating slugs, and real-time validation.
+- **Social Interaction**: Robust comment system with image attachments and nested design.
+- **Responsive & Accessible**: Fully optimized for mobile with a glassmorphic, dark-mode-ready UI.
+- **Secure Auth**: Full authentication flow using Supabase Auth.
 
-### `npm start`
+## 🛠 Tech Stack
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+### 🟦 TypeScript
+The entire project is written in **TypeScript**. 
+- **Type Safety**: Ensures data consistency from the Supabase fetching layer all the way to the UI components.
+- **Developer Experience**: Robust IDE support with autocompletion for state shapes, props, and database schemas.
+- **Maintainability**: Clear interfaces for `Blog`, `Comment`, and `User` models make the codebase easy to refactor and scale.
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+### 🟣 Redux (Toolkit)
+We use **Redux Toolkit** for sophisticated state management.
+- **Global Data Store**: Manages the list of blogs, the current active blog, and user-specific data.
+- **Asynchronous Thunks**: Handles complex logic for fetching, creating, updating, and deleting blog posts with built-in loading and error states.
+- **Centralized Logic**: Separates business logic from UI components, keeping views clean and focused on rendering.
 
-### `npm test`
+### ⚡ Supabase
+**Supabase** serves as our Backend-as-a-Service (BaaS).
+- **PostgreSQL Database**: Stores all blog posts and comments with relational integrity.
+- **Authentication**: Out-of-the-box support for email/password login and session persistence.
+- **Storage**: Handles high-resolution image uploads for cover photos and blog content.
+- **Row Level Security (RLS)**: Protects data by ensuring only authors can edit or delete their own posts, while allowing public read access.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## 📁 Project Structure
 
-### `npm run build`
+```text
+src/
+├── components/     # Reusable UI elements (Navbar, Editor, Pagination)
+├── contexts/       # AuthContext for universal session management
+├── features/       # Redux slices and async thunks (blog, comments)
+├── layouts/        # Page wrappers and consistent shell designs
+├── pages/          # Full page components (BlogList, BlogForm, Login)
+└── store.ts        # Central Redux store configuration
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## ⚙️ Local Setup
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+1.  **Clone the repository**:
+    ```bash
+    git clone [repository-url]
+    cd simple-blog
+    ```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+2.  **Install dependencies**:
+    ```bash
+    npm install
+    ```
 
-### `npm run eject`
+3.  **Environment Variables**:
+    Create a `.env` file in the root directory:
+    ```text
+    REACT_APP_SUPABASE_URL=your_supabase_url
+    REACT_APP_SUPABASE_ANON_KEY=your_supabase_anon_key
+    ```
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+4.  **Start the development server**:
+    ```bash
+    npm start
+    ```
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## 🔐 Database Security
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+Ensure you have RLS policies enabled in your Supabase dashboard:
+- **Blogs**: `(auth.uid() = user_id)` for UPDATE/DELETE.
+- **Comments**: `EXISTS (SELECT 1 FROM blogs WHERE blogs.id = comments.blog_id AND blogs.user_id = auth.uid())` for DELETE.
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+---
 
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+Built with ❤️ by parodez

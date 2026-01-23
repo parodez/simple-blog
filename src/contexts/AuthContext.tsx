@@ -30,10 +30,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(false);
       }
     };
-    
+
     checkSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange (
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
@@ -46,18 +46,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password} );
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
   };
-  
-  const register = async ( email: string, password: string ) => {
+
+  const register = async (email: string, password: string) => {
     const { error } = await supabase.auth.signUp({ email, password });
     if (error) throw error;
   };
 
   const logout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    console.log('AuthProvider: logout requested');
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+    } catch (err) {
+      console.error('AuthProvider: signOut error', err);
+      throw err;
+    } finally {
+      // Manually clear state to ensure UI updates immediately
+      setSession(null);
+      setUser(null);
+      console.log('AuthProvider: local auth state cleared');
+    }
   };
 
   return (

@@ -41,7 +41,7 @@ export const fetchBlogs = createAsyncThunk(
       .from("blogs")
       .select("*", { count: "exact" })
       .eq("user_id", userId)
-      .order("created_at", { ascending: false })
+      .order("updated_at", { ascending: false })
       .range(from, to);
 
     if (error) {
@@ -237,14 +237,36 @@ export const updateBlogAsync = createAsyncThunk(
 export const deleteBlogAsync = createAsyncThunk(
   "blogs/deleteBlogAsync",
   async (id: string) => {
-    const { error } = await supabase
+    console.log('Attempting to delete blog and its comments:', id);
+
+    // 1. Delete associated comments first to avoid foreign key constraints
+    const { error: commentsError } = await supabase
+      .from("comments")
+      .delete()
+      .eq("blog_id", id);
+
+    if (commentsError) {
+      console.warn('Error deleting comments, proceeding anyway:', commentsError.message);
+    }
+
+    // 2. Delete the blog post and use .select() to verify it happened
+    const { data, error } = await supabase
       .from("blogs")
       .delete()
-      .eq("id", id);
+      .eq("id", id)
+      .select();
 
     if (error) {
+      console.error('Supabase delete error:', error);
       throw new Error(error.message);
     }
+
+    if (!data || data.length === 0) {
+      console.error('No blog was deleted. This might be due to RLS policies.');
+      throw new Error("You do not have permission to delete this post or it does not exist.");
+    }
+
+    console.log('Successfully deleted blog:', id);
     return id;
   },
 );
