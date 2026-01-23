@@ -6,7 +6,7 @@ import { RootState, AppDispatch } from '../../store';
 import { useAuth } from '../../contexts/AuthContext';
 
 const BlogDetail: React.FC = () => {
-    const { username, slug } = useParams<{ username: string; slug: string }>();
+    const { slug } = useParams<{ slug: string }>();
     const dispatch = useDispatch<AppDispatch>();
     const navigate = useNavigate();
     const { currentBlog: blog, loading, error } = useSelector((state: RootState) => state.blogs);
@@ -72,21 +72,22 @@ const BlogDetail: React.FC = () => {
                         </Link>
                     </div>
                     <div className="flex items-center">
-                        {user && (
+                        {user ? (
                             <Link
                                 to="/blog"
                                 className="bg-primary hover:bg-blue-600 text-white font-semibold py-2 px-5 rounded-full transition-colors duration-200 text-sm md:text-base"
                             >
                                 My Blogs
                             </Link>
-                        ) || (
-                                <Link
-                                    to="/register"
-                                    className="bg-primary hover:bg-blue-600 text-white font-semibold py-2 px-5 rounded-full transition-colors duration-200 text-sm md:text-base"
-                                >
-                                    Create Your Own Blog
-                                </Link>
-                            )}
+                        ) : (
+                            <Link
+                                to="/register"
+                                className="bg-primary hover:bg-blue-600 text-white font-semibold py-2 px-5 rounded-full transition-colors duration-200 text-sm md:text-base"
+                            >
+                                Create Your Own Blog
+                            </Link>
+                        )}
+
                     </div>
                 </div>
             </nav>

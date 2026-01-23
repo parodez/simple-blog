@@ -115,7 +115,7 @@ const BlogForm: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch<AppDispatch>();
     const { user } = useAuth();
-    const { currentBlog, loading, error } = useSelector((state: RootState) => state.blogs);
+    const { currentBlog, loading } = useSelector((state: RootState) => state.blogs);
     const username = user?.email?.split('@')[0] || 'author';
 
     const [title, setTitle] = useState('');

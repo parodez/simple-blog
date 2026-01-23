@@ -8,7 +8,6 @@ const Login: React.FC = () => {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -87,14 +86,11 @@ const Login: React.FC = () => {
                 <label className="text-text-main dark:text-white text-sm font-semibold transition-colors" htmlFor="password">
                   Password
                 </label>
-                <a className="text-primary text-sm font-bold hover:text-primary/80 transition-colors" href="#">
-                  Forgot password?
-                </a>
               </div>
               <div className="relative group">
                 <input
                   id="password"
-                  type={showPassword ? 'text' : 'password'}
+                  type="password"
                   required
                   autoComplete="current-password"
                   value={password}
