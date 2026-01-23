@@ -1,12 +1,14 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { supabase } from "../supabaseClient";
 
-interface Comment {
+export interface Comment {
   id: string;
   blog_id: string;
-  user_id: string;
   content: string;
+  email: string;
+  name: string;
   image_url?: string;
-  created_at?: string;
+  created_at: string;
 }
 
 interface CommentState {
@@ -21,45 +23,62 @@ const initialState: CommentState = {
   error: null,
 };
 
+export const fetchComments = createAsyncThunk(
+  "comments/fetchComments",
+  async (blogId: string) => {
+    const { data, error } = await supabase
+      .from("comments")
+      .select("*")
+      .eq("blog_id", blogId)
+      .order("created_at", { ascending: false });
+
+    if (error) throw new Error(error.message);
+    return data as Comment[];
+  }
+);
+
+export const createComment = createAsyncThunk(
+  "comments/createComment",
+  async (comment: Omit<Comment, "id" | "created_at">) => {
+    const { data, error } = await supabase
+      .from("comments")
+      .insert([comment])
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    return data as Comment;
+  }
+);
+
 const commentSlice = createSlice({
   name: "comments",
   initialState,
   reducers: {
-    setComments(state, action: PayloadAction<Comment[]>) {
-      state.comments = action.payload;
-      state.loading = false;
-      state.error = null;
-    },
-    addComment(state, action: PayloadAction<Comment>) {
-      state.comments.push(action.payload);
-    },
-    deleteComment(state, action: PayloadAction<string>) {
-      state.comments = state.comments.filter(
-        (comment) => comment.id !== action.payload,
-      );
-    },
-    setLoading(state, action: PayloadAction<boolean>) {
-      state.loading = action.payload;
-    },
-    setError(state, action: PayloadAction<string | null>) {
-      state.error = action.payload;
-      state.loading = false;
-    },
     clearComments(state) {
       state.comments = [];
       state.loading = false;
       state.error = null;
     },
   },
-  // Extra Reducers here if needed
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchComments.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchComments.fulfilled, (state, action) => {
+        state.comments = action.payload;
+        state.loading = false;
+      })
+      .addCase(fetchComments.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || "Failed to fetch comments";
+      })
+      .addCase(createComment.fulfilled, (state, action) => {
+        state.comments.unshift(action.payload);
+      });
+  },
 });
 
-export const {
-  setComments,
-  addComment,
-  deleteComment,
-  setLoading,
-  setError,
-  clearComments,
-} = commentSlice.actions;
+export const { clearComments } = commentSlice.actions;
 export default commentSlice.reducer;

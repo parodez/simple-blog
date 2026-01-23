@@ -4,18 +4,24 @@ import { fetchBlogs } from '../../features/blogSlice';
 import { RootState, AppDispatch } from '../../store';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { Logo } from '../../components/Logo';
+import { deleteBlogAsync } from '../../features/blogSlice';
+import { AnimatePresence, motion } from 'framer-motion';
 
 const BlogList: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { blogs, loading, error } = useSelector((state: RootState) => state.blogs);
+  const { blogs, totalCount, itemsPerPage, loading, error } = useSelector((state: RootState) => state.blogs);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [blogToDelete, setBlogToDelete] = React.useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = React.useState(false);
+  const [currentPage, setCurrentPage] = React.useState(1);
 
   useEffect(() => {
     if (user?.id) {
-      dispatch(fetchBlogs(user?.id));
+      dispatch(fetchBlogs({ userId: user.id, page: currentPage, limit: itemsPerPage }));
     }
-  }, [dispatch, user]);
+  }, [dispatch, user, currentPage, itemsPerPage]);
 
   const handleLogout = async () => {
     try {
@@ -32,15 +38,26 @@ const BlogList: React.FC = () => {
     return email.substring(0, 2).toUpperCase();
   };
 
+  const handleDelete = async () => {
+    if (!blogToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      await dispatch(deleteBlogAsync(blogToDelete)).unwrap();
+      setBlogToDelete(null);
+    } catch (err) {
+      console.error('Delete error:', err);
+      alert('Failed to delete blog post');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div className="bg-background-light dark:bg-background-dark text-[#111418] dark:text-white min-h-screen font-sans">
       <header className="sticky top-0 z-50 w-full bg-white dark:bg-slate-900 border-b border-[#dbe0e6] dark:border-slate-800 shadow-sm">
-        <div className="max-w-[1200px] mx-auto px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <div className="flex flex-col">
-              <h1 className="text-primary text-xl font-black leading-none tracking-tight">SimpleBlog</h1>
-            </div>
-          </div>
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 h-16 flex items-center justify-between">
+          <Logo link />
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-3 pr-6 border-r border-[#dbe0e6] dark:border-slate-800">
               <div className="flex flex-col text-right">
@@ -62,7 +79,6 @@ const BlogList: React.FC = () => {
           </div>
         </div>
       </header>
-
       <main className="w-full">
         <div className="max-w-[1200px] mx-auto p-8">
           <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
@@ -143,6 +159,7 @@ const BlogList: React.FC = () => {
                                   <span className="material-symbols-outlined text-xl">edit</span>
                                 </button>
                                 <button
+                                  onClick={() => setBlogToDelete(blog.id)}
                                   className="p-2 text-[#617289] dark:text-slate-400 hover:text-red-500 transition-colors"
                                   title="Delete"
                                 >
@@ -160,17 +177,63 @@ const BlogList: React.FC = () => {
             </div>
           )}
 
-          {!loading && !error && blogs.length > 0 && (
+          {!loading && !error && totalCount > 0 && (
             <div className="flex items-center justify-between px-2 py-4">
-              <p className="text-sm text-[#617289] dark:text-slate-400">Showing {blogs.length} posts</p>
+              <p className="text-sm text-[#617289] dark:text-slate-400">
+                Showing {blogs.length} of {totalCount} posts
+              </p>
               <div className="flex gap-2">
-                <button className="flex items-center justify-center w-10 h-10 rounded-lg border border-[#dbe0e6] dark:border-slate-800 bg-white dark:bg-slate-900 text-[#617289] hover:bg-background-light dark:hover:bg-slate-800 transition-colors">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="flex items-center justify-center w-10 h-10 rounded-lg border border-[#dbe0e6] dark:border-slate-800 bg-white dark:bg-slate-900 text-[#617289] hover:bg-background-light dark:hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >
                   <span className="material-symbols-outlined">chevron_left</span>
                 </button>
-                <button className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary text-white font-bold">1</button>
-                <button className="flex items-center justify-center w-10 h-10 rounded-lg border border-[#dbe0e6] dark:border-slate-800 bg-white dark:bg-slate-900 text-[#617289] hover:bg-background-light dark:hover:bg-slate-800 transition-colors">2</button>
-                <button className="flex items-center justify-center w-10 h-10 rounded-lg border border-[#dbe0e6] dark:border-slate-800 bg-white dark:bg-slate-900 text-[#617289] hover:bg-background-light dark:hover:bg-slate-800 transition-colors">3</button>
-                <button className="flex items-center justify-center w-10 h-10 rounded-lg border border-[#dbe0e6] dark:border-slate-800 bg-white dark:bg-slate-900 text-[#617289] hover:bg-background-light dark:hover:bg-slate-800 transition-colors">
+
+                {(() => {
+                  const totalPages = Math.ceil(totalCount / itemsPerPage);
+                  if (totalPages <= 1) return null;
+
+                  const pages = new Set<number>([1, totalPages]);
+
+                  // Calculate the central 3 pages window
+                  let start = Math.max(1, currentPage - 1);
+                  let end = Math.min(totalPages, currentPage + 1);
+
+                  // Shift window if at boundaries to show 3 if possible
+                  if (currentPage === 1) end = Math.min(totalPages, 3);
+                  if (currentPage === totalPages) start = Math.max(1, totalPages - 2);
+
+                  for (let i = start; i <= end; i++) {
+                    pages.add(i);
+                  }
+
+                  return Array.from(pages)
+                    .sort((a, b) => a - b)
+                    .map((page, index, array) => (
+                      <React.Fragment key={page}>
+                        {index > 0 && page !== array[index - 1] + 1 && (
+                          <span className="flex items-center justify-center w-6 text-[#617289] font-bold">...</span>
+                        )}
+                        <button
+                          onClick={() => setCurrentPage(page)}
+                          className={`flex items-center justify-center w-10 h-10 rounded-lg font-bold transition-colors ${currentPage === page
+                              ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                              : 'border border-[#dbe0e6] dark:border-slate-800 bg-white dark:bg-slate-900 text-[#617289] hover:bg-background-light dark:hover:bg-slate-800'
+                            }`}
+                        >
+                          {page}
+                        </button>
+                      </React.Fragment>
+                    ));
+                })()}
+
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(Math.ceil(totalCount / itemsPerPage), prev + 1))}
+                  disabled={currentPage === Math.ceil(totalCount / itemsPerPage)}
+                  className="flex items-center justify-center w-10 h-10 rounded-lg border border-[#dbe0e6] dark:border-slate-800 bg-white dark:bg-slate-900 text-[#617289] hover:bg-background-light dark:hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >
                   <span className="material-symbols-outlined">chevron_right</span>
                 </button>
               </div>
@@ -178,6 +241,49 @@ const BlogList: React.FC = () => {
           )}
         </div>
       </main>
+
+      <AnimatePresence>
+        {blogToDelete && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setBlogToDelete(null)}
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 max-w-md w-full shadow-2xl relative z-10 border border-gray-100 dark:border-slate-800"
+            >
+              <div className="w-16 h-16 bg-red-50 dark:bg-red-900/20 rounded-2xl flex items-center justify-center mb-6">
+                <span className="material-symbols-outlined text-red-600 text-3xl">delete_forever</span>
+              </div>
+              <h3 className="text-2xl font-bold text-[#111418] dark:text-white mb-2">Delete Post?</h3>
+              <p className="text-[#617289] dark:text-slate-400 text-sm mb-8 leading-relaxed">
+                Are you sure you want to delete this blog post? This action cannot be undone and the content will be permanently removed.
+              </p>
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setBlogToDelete(null)}
+                  className="flex-1 px-6 py-4 rounded-xl bg-gray-50 dark:bg-slate-800 text-[#111418] dark:text-white text-sm font-bold hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="flex-1 px-6 py-4 rounded-xl bg-red-600 text-white text-sm font-bold hover:bg-red-700 transition-colors shadow-lg shadow-red-600/20 disabled:opacity-50"
+                >
+                  {isDeleting ? 'Deleting...' : 'Delete Post'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

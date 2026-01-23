@@ -15,6 +15,8 @@ interface Blog {
 
 interface BlogState {
   blogs: Blog[];
+  totalCount: number;
+  itemsPerPage: number;
   currentBlog: Blog | null;
   loading: boolean;
   error: string | null;
@@ -22,6 +24,8 @@ interface BlogState {
 
 const initialState: BlogState = {
   blogs: [],
+  totalCount: 0,
+  itemsPerPage: 5,
   currentBlog: null,
   loading: false,
   error: null,
@@ -29,17 +33,21 @@ const initialState: BlogState = {
 
 export const fetchBlogs = createAsyncThunk(
   "blogs/fetchBlogs",
-  async (userId: string) => {
-    const { data, error } = await supabase
+  async ({ userId, page = 1, limit = 5 }: { userId: string; page?: number; limit?: number }) => {
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    const { data, error, count } = await supabase
       .from("blogs")
-      .select("*")
+      .select("*", { count: "exact" })
       .eq("user_id", userId)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .range(from, to);
 
     if (error) {
       throw new Error(error.message);
     }
-    return data;
+    return { data, count: count || 0 };
   },
 );
 
@@ -118,7 +126,8 @@ const blogSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchBlogs.fulfilled, (state, action) => {
-        state.blogs = action.payload || [];
+        state.blogs = action.payload.data || [];
+        state.totalCount = action.payload.count;
         state.loading = false;
       })
       .addCase(fetchBlogs.rejected, (state, action) => {
@@ -176,6 +185,18 @@ const blogSlice = createSlice({
       .addCase(updateBlogAsync.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || "Failed to update blog";
+      })
+      .addCase(deleteBlogAsync.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteBlogAsync.fulfilled, (state, action) => {
+        state.blogs = state.blogs.filter(b => b.id !== action.payload);
+        state.loading = false;
+      })
+      .addCase(deleteBlogAsync.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || "Failed to delete blog";
       });
   },
 });
@@ -210,6 +231,21 @@ export const updateBlogAsync = createAsyncThunk(
       throw new Error(error.message);
     }
     return data;
+  },
+);
+
+export const deleteBlogAsync = createAsyncThunk(
+  "blogs/deleteBlogAsync",
+  async (id: string) => {
+    const { error } = await supabase
+      .from("blogs")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+    return id;
   },
 );
 

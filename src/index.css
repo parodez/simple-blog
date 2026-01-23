@@ -1,10 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   body {
-    @apply font-sans antialiased;
+    @apply font-sans antialiased text-text-main;
   }
 }
 
@@ -12,8 +14,6 @@
   font-family: 'Material Symbols Outlined';
   font-weight: normal;
   font-style: normal;
-  font-size: 24px;
-  line-height: 1;
   letter-spacing: normal;
   text-transform: none;
   display: inline-block;
@@ -22,8 +22,35 @@
   direction: ltr;
   -webkit-font-smoothing: antialiased;
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  @apply select-none;
 }
 
+.immersive-bg {
+  background-image: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.4)), url(https://lh3.googleusercontent.com/aida-public/AB6AXuAwD7wSPrQPnXcFV6T9pZr33jKUeSdco7KkDCBrWtYIPhqTUznpOMm68FIfQ0UcuSunvkEKTM__RIbUscAO2F3xO6g2Zml1Lwko1oC4RYrtgpkJpbyXZa6UlBWHxOPu0XsRaluEGGnyK89_wAWUosT3j05_t4JqA1RSjIH47YqkR7sZ48AlFIbgtfIQsoXHfDHvBl0x2WD2qii96amrJhiVROJRr8xm8Xoe2NHhwM2DcnYjkj4V5x_oLTQ_sZP7ExsZcaWG8kf4AnhJ);
+  background-size: cover;
+  background-position: center;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
+
+.dark .glass-card {
+  background: rgba(10, 12, 16, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-quote {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
 
 .bg-login-hero {
   background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBJ6srPyct35xL75Cueu8Vi9Y_gkw6GjScMRzhuXCV545Z2xtSA9Q_ZNo2bS1yc_5oUBZi0XftR-Bx8NleuW_KW860RFMJaxcdb-TlcE_2OxetuRr30uoSpFQBbeXh2yybRz2F_qf5hhanDu-xLfJ0Su59-zrihTJ03DRIo3PtZHiKUnVMJBjaJNGEvo3QNKXQiUMsEYrHNxZAuZNEXrsgyOYDbduG9ioYhT7zlqY8rC_EVkzbRZgwWTspJ92HSFb0JiIeuplqRV67O");
@@ -33,12 +60,23 @@
   background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBJ6srPyct35xL75Cueu8Vi9Y_gkw6GjScMRzhuXCV545Z2xtSA9Q_ZNo2bS1yc_5oUBZi0XftR-Bx8NleuW_KW860RFMJaxcdb-TlcE_2OxetuRr30uoSpFQBbeXh2yybRz2F_qf5hhanDu-xLfJ0Su59-zrihTJ03DRIo3PtZHiKUnVMJBjaJNGEvo3QNKXQiUMsEYrHNxZAuZNEXrsgyOYDbduG9ioYhT7zlqY8rC_EVkzbRZgwWTspJ92HSFb0JiIeuplqRV67O");
 }
 
-
 .form-input-container:focus-within label {
   color: #136dec;
-  /* Using the primary color directly to avoid @apply issues if any */
 }
 
 .article-content {
   font-family: "Lora", serif;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
 }
