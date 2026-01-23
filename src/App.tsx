@@ -5,8 +5,9 @@ import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { AuthProvider } from './contexts/AuthContext';
 import BlogList from './pages/Blog/BlogList';
-// import BlogForm from './pages/Blog/BlogForm';
-// import BlogDetail from './pages/Blog/BlogDetail';
+import BlogDetail from './pages/Blog/BlogDetail';
+import BlogForm from './pages/Blog/BlogForm';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
@@ -16,15 +17,42 @@ function App() {
           <Route path="/" element={<Login />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path='/blog' element={<BlogList />} />
-          {/* <Route path='/blog/new' element={<BlogForm />} /> */}
-          {/* <Route path='/blog/:id' element={<BlogDetail />} /> */}
-          {/* <Route path='/blog/edit/:id' element={<BlogForm />} /> */}
-          {/* <Route path="/" element={<Home />} /> */}
+          <Route
+            path='/blog'
+            element={
+              <ProtectedRoute>
+                <BlogList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path='/blog/:username/:slug'
+            element={
+              <BlogDetail />
+            }
+          />
+          <Route
+            path='/blog/new'
+            element={
+              <ProtectedRoute>
+                <BlogForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path='/blog/edit/:id'
+            element={
+              <ProtectedRoute>
+                <BlogForm />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
   );
 }
+
+
 
 export default App;

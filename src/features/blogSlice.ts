@@ -6,6 +6,7 @@ interface Blog {
   id: string;
   title: string;
   content: string;
+  slug?: string;
   image_url?: string;
   created_at?: string;
   updated_at?: string;
@@ -14,15 +15,67 @@ interface Blog {
 
 interface BlogState {
   blogs: Blog[];
+  currentBlog: Blog | null;
   loading: boolean;
   error: string | null;
 }
 
 const initialState: BlogState = {
   blogs: [],
+  currentBlog: null,
   loading: false,
   error: null,
 };
+
+export const fetchBlogs = createAsyncThunk(
+  "blogs/fetchBlogs",
+  async (userId: string) => {
+    const { data, error } = await supabase
+      .from("blogs")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+    return data;
+  },
+);
+
+export const fetchBlogById = createAsyncThunk(
+  "blogs/fetchBlogById",
+  async (blogId: string) => {
+    const { data, error } = await supabase
+      .from("blogs")
+      .select("*")
+      .eq("id", blogId)
+      .maybeSingle();
+
+
+    if (error) {
+      throw new Error(error.message);
+    }
+    return data;
+  },
+);
+
+export const fetchBlogBySlug = createAsyncThunk(
+  "blogs/fetchBlogBySlug",
+  async (slug: string) => {
+    const { data, error } = await supabase
+      .from("blogs")
+      .select("*")
+      .eq("slug", slug)
+      .maybeSingle();
+
+
+    if (error) {
+      throw new Error(error.message);
+    }
+    return data;
+  },
+);
 
 const blogSlice = createSlice({
   name: "blogs",
@@ -54,6 +107,9 @@ const blogSlice = createSlice({
       state.error = action.payload;
       state.loading = false;
     },
+    clearCurrentBlog(state) {
+      state.currentBlog = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -68,18 +124,70 @@ const blogSlice = createSlice({
       .addCase(fetchBlogs.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || "Failed to fetch blogs";
+      })
+      .addCase(fetchBlogById.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchBlogById.fulfilled, (state, action) => {
+        state.currentBlog = action.payload;
+        state.loading = false;
+      })
+      .addCase(fetchBlogById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || "Failed to fetch blog";
+      })
+      .addCase(fetchBlogBySlug.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchBlogBySlug.fulfilled, (state, action) => {
+        state.currentBlog = action.payload;
+        state.loading = false;
+      })
+      .addCase(fetchBlogBySlug.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || "Failed to fetch blog by slug";
+      })
+      .addCase(createBlog.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createBlog.fulfilled, (state, action) => {
+        state.blogs.unshift(action.payload);
+        state.loading = false;
+      })
+      .addCase(createBlog.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || "Failed to create blog";
+      })
+      .addCase(updateBlogAsync.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateBlogAsync.fulfilled, (state, action) => {
+        const index = state.blogs.findIndex(b => b.id === action.payload.id);
+        if (index !== -1) {
+          state.blogs[index] = action.payload;
+        }
+        state.currentBlog = action.payload;
+        state.loading = false;
+      })
+      .addCase(updateBlogAsync.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || "Failed to update blog";
       });
   },
 });
 
-export const fetchBlogs = createAsyncThunk(
-  "blogs/fetchBlogs",
-  async (userId: string) => {
+export const createBlog = createAsyncThunk(
+  "blogs/createBlog",
+  async (blog: Omit<Blog, "id" | "created_at" | "updated_at">) => {
     const { data, error } = await supabase
       .from("blogs")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
+      .insert([blog])
+      .select()
+      .single();
 
     if (error) {
       throw new Error(error.message);
@@ -87,6 +195,24 @@ export const fetchBlogs = createAsyncThunk(
     return data;
   },
 );
+
+export const updateBlogAsync = createAsyncThunk(
+  "blogs/updateBlogAsync",
+  async ({ id, ...updates }: Partial<Blog> & { id: string }) => {
+    const { data, error } = await supabase
+      .from("blogs")
+      .update(updates)
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+    return data;
+  },
+);
+
 export const {
   setBlogs,
   addBlog,
@@ -94,5 +220,7 @@ export const {
   deleteBlog,
   setLoading,
   setError,
+  clearCurrentBlog,
 } = blogSlice.actions;
+
 export default blogSlice.reducer;

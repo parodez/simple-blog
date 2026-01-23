@@ -26,6 +26,7 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -121,13 +122,14 @@
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
-button {
+/* button {
   width: 100%;
   padding: 14px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -154,7 +156,7 @@ button:active:not(:disabled) {
 button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-}
+} */
 
 .login-footer {
   margin-top: 28px;
@@ -210,8 +212,8 @@ button:disabled {
     padding: 12px 14px;
   }
 
-  button {
+  /* button {
     padding: 13px;
     font-size: 15px;
-  }
+  } */
 }
